@@ -58,10 +58,8 @@ $ARIA2_CMD \
     --retry-wait=5
 
 (
-    trackers=$(curl -Ns --connect-timeout 5 --max-time 30 \
-        https://cdn.jsdelivr.net/gh/ngosang/trackerslist@master/trackers_all.txt 2>/dev/null \
-        | awk '$0' | tr '\n' ',')
-    if [ -n "$trackers" ]; then
+    tracker_list=$(curl -Ns https://ngosang.github.io/trackerslist/trackers_all_http.txt | awk '$0' | tr '\n\n' ',')
+    if [ -n "$tracker_list" ]; then
         for _ in $(seq 1 20); do
             if curl -s --connect-timeout 2 --max-time 3 -o /dev/null \
                 http://127.0.0.1:6800/jsonrpc 2>/dev/null; then
@@ -69,7 +67,7 @@ $ARIA2_CMD \
             fi
             sleep 1
         done
-        payload="{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"aria2.changeGlobalOption\",\"params\":[{\"bt-tracker\":\"[${trackers%,}]\"}]}"
+        payload="{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"aria2.changeGlobalOption\",\"params\":[{\"bt-tracker\":\"[${tracker_list%,}]\"}]}"
         curl -s -X POST -d "$payload" http://127.0.0.1:6800/jsonrpc >/dev/null 2>&1
     fi
 ) &
